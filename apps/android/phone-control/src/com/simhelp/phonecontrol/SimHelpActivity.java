@@ -4,7 +4,6 @@ package com.simhelp.phonecontrol;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.role.RoleManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -76,7 +75,7 @@ public final class SimHelpActivity extends Activity {
         page.addView(badge);
 
         LinearLayout device = card(page, "Android phone");
-        device.addView(text(Build.MANUFACTURER + " " + Build.MODEL + " · Android " + Build.VERSION.RELEASE, 15, TEXT));
+        device.addView(text(Build.MANUFACTURER + " " + Build.MODEL + " Â· Android " + Build.VERSION.RELEASE, 15, TEXT));
         device.addView(text("Call audio on the Galaxy A12 has not been verified in a real call. A connected audio bridge does not confirm that two-way audio works.", 13, MUTED));
 
         LinearLayout setup = card(page, "1. Set up Android");
@@ -91,7 +90,7 @@ public final class SimHelpActivity extends Activity {
         LinearLayout connect = card(page, "2. Connect your iPhone");
         connect.addView(text("Connect both phones to the same Wi-Fi, or connect your iPhone to this Android phone's hotspot. In the iPhone app, choose Local / VoWLAN and enter the pairing code below.", 14, MUTED));
         peerStatus = text("", 14, TEXT); connect.addView(peerStatus);
-        pairCode = text("— — — — — —", 30, ACCENT);
+        pairCode = text("â€” â€” â€” â€” â€” â€”", 30, ACCENT);
         pairCode.setGravity(Gravity.CENTER);
         pairCode.setTextDirection(View.TEXT_DIRECTION_LTR);
         pairCode.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
@@ -100,7 +99,7 @@ public final class SimHelpActivity extends Activity {
         pairDetail.setTextIsSelectable(true); connect.addView(pairDetail);
         expiry = text("", 12, MUTED); connect.addView(expiry);
         button(connect, "Start pairing", this::startPairing);
-        button(connect, "Stop pairing", () -> { stopPairing(); pairCode.setText("— — — — — —"); pairDetail.setText("Pairing stopped."); });
+        button(connect, "Stop pairing", () -> { stopPairing(); pairCode.setText("â€” â€” â€” â€” â€” â€”"); pairDetail.setText("Pairing stopped."); });
 
         LinearLayout test = card(page, "3. Check call audio");
         test.addView(text("Make a short test call and check that both people can hear each other. The Galaxy A12's audio support must be verified during a real call; connection and permission checks alone cannot confirm it.", 14, TEXT));
@@ -111,7 +110,7 @@ public final class SimHelpActivity extends Activity {
         LinearLayout help = card(page, "Help and advanced settings");
         button(help, "Open advanced settings", () -> open(new Intent(this, MainActivity.class)));
         button(help, "About SimHelp", () -> new AlertDialog.Builder(this)
-                .setTitle("SimHelp · Personal build · TheSkeezad")
+                .setTitle("SimHelp Â· Personal build Â· TheSkeezad")
                 .setMessage("SimHelp connects your iPhone to the SIM in your Android phone for calls and SMS.\n\nInstall the iPhone IPA using Sideloadly. Pair the phones using Local / VoWLAN on the same network. Shizuku must be running and authorized for the no-root audio bridge.\n\nAudio compatibility depends on your phone and must be checked in a real call.\n\nDeveloper: TheSkeezad\nLicense notices are included in the APK under assets/licenses.")
                 .setPositiveButton("OK", null).show());
         TextView footer = text("SimHelp | TheSkeezad\nPersonal build | Test call audio on your phone before relying on it", 12, MUTED);
@@ -131,17 +130,18 @@ public final class SimHelpActivity extends Activity {
     }
 
     private boolean isDialer() {
-        RoleManager manager = getSystemService(RoleManager.class);
-        return manager != null && manager.isRoleHeld(RoleManager.ROLE_DIALER);
+        return DialerRoleCompat.isDefaultDialer(this);
     }
 
     private void requestDialer() {
-        RoleManager manager = getSystemService(RoleManager.class);
-        if (manager == null || !manager.isRoleAvailable(RoleManager.ROLE_DIALER)) {
-            message("Default phone app unavailable", "This device does not allow SimHelp to request the default phone app role."); return;
+        if (!DialerRoleCompat.canRequestDefaultDialer(this)) {
+            message("Default phone app unavailable", "This device does not allow changing the default phone app.");
+            return;
         }
         if (isDialer()) { updateStatus(); return; }
-        startActivityForResult(manager.createRequestRoleIntent(RoleManager.ROLE_DIALER), 400);
+        if (!DialerRoleCompat.requestDefaultDialer(this, 400)) {
+            message("Default phone app unavailable", "Unable to open the default phone app picker.");
+        }
     }
 
     private void requestNeededPermissions() {
@@ -176,7 +176,7 @@ public final class SimHelpActivity extends Activity {
             long seconds = Math.max(0, (pairingExpires - System.currentTimeMillis()) / 1000);
             expiry.setText(seconds > 0 ? "Code expires in: " + seconds + " seconds" : "Pairing code expired. Start pairing again.");
             if (seconds == 0) {
-                stopPairing(); pairCode.setText("— — — — — —");
+                stopPairing(); pairCode.setText("â€” â€” â€” â€” â€” â€”");
                 pairDetail.setText("The code has expired. Tap Start pairing to generate a new code.");
                 expiry.setText("Pairing session expired.");
             }
@@ -190,7 +190,7 @@ public final class SimHelpActivity extends Activity {
         stopPairing();
         final long generation = pairingGeneration;
         pairDetail.setText("Starting the pairing service...");
-        pairCode.setText("…");
+        pairCode.setText("â€¦");
         pairing = new PairingServer(this, new PairingServer.Listener() {
             @Override public void onStarted(String code, String address, long expiresAt) {
                 runOnUiThread(() -> {
@@ -205,7 +205,7 @@ public final class SimHelpActivity extends Activity {
                 runOnUiThread(() -> {
                     if (generation != pairingGeneration || isDestroyed()) return;
                     stopPairing();
-                    pairCode.setText("✓");
+                    pairCode.setText("âœ“");
                     pairDetail.setText("Pairing complete. Open the iPhone app to check the connection and test calls and SMS.");
                     updateStatus();
                 });
@@ -214,7 +214,7 @@ public final class SimHelpActivity extends Activity {
                 runOnUiThread(() -> {
                     if (generation != pairingGeneration || isDestroyed()) return;
                     stopPairing();
-                    pairCode.setText("—");
+                    pairCode.setText("â€”");
                     pairDetail.setText("Pairing failed. Check the Wi-Fi connection and try again. Both phones must be on the same network.");
                 });
             }
