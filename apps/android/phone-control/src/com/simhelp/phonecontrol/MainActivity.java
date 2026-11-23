@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.graphics.Insets;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -274,18 +273,8 @@ public final class MainActivity extends Activity {
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(78)));
 
         root.setOnApplyWindowInsetsListener((view, insets) -> {
-            if (Build.VERSION.SDK_INT >= 30) {
-                Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
-                Insets ime = insets.getInsets(WindowInsets.Type.ime());
-                view.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
-                View focused = getCurrentFocus();
-                if (focused instanceof EditText && ime.bottom > 0) focused.post(() ->
-                        focused.requestRectangleOnScreen(new android.graphics.Rect(0, 0,
-                                focused.getWidth(), focused.getHeight()), false));
-            } else {
-                view.setPadding(0, insets.getSystemWindowInsetTop(), 0,
-                        insets.getSystemWindowInsetBottom());
-            }
+            view.setPadding(0, insets.getSystemWindowInsetTop(), 0,
+                    insets.getSystemWindowInsetBottom());
             return insets;
         });
         return root;
