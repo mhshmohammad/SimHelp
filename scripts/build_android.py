@@ -83,7 +83,7 @@ def main():
     # this workspace has no spaces in these paths, so emit raw forward-slash paths.
     dex_args.write_text("\n".join(str(p).replace("\\", "/") for p in [*sorted((OUT / "classes").rglob("*.class")), *jars]), encoding="utf-8")
     run(jdk / "bin/java.exe", "-Xmx2g", "-cp", bt / "lib/d8.jar", "com.android.tools.r8.D8",
-        "--lib", android, "--min-api", "29", "--output", OUT / "dex", "@" + str(dex_args))
+        "--lib", android, "--min-api", "26", "--output", OUT / "dex", "@" + str(dex_args))
     resources = OUT / "resources.zip"
     run(bt / "aapt2.exe", "compile", "--dir", SRC / "apps/android/phone-control/res", "-o", resources)
     manifest = OUT / "AndroidManifest.xml"
