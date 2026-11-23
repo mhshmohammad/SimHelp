@@ -1,6 +1,5 @@
 package com.simhelp.phonecontrol;
 
-import android.app.role.RoleManager;
 import android.content.Context;
 
 import org.json.JSONArray;
@@ -103,7 +102,7 @@ final class StandaloneAgentGateway {
             return new JSONObject().put("configured", true).put("local_mode", true).toString();
         }
         String deviceID = registration.getString("device_id");
-        String hint = deviceID.length() <= 8 ? deviceID : "…" + deviceID.substring(deviceID.length() - 8);
+        String hint = deviceID.length() <= 8 ? deviceID : "â€¦" + deviceID.substring(deviceID.length() - 8);
         BridgeLog.info("standalone_pairing_saved device_id_hint=" + DebugRedactor.safeIdentifier(hint));
         return new JSONObject().put("configured", true).put("device_id_hint", hint).toString();
     }
@@ -355,8 +354,7 @@ final class StandaloneAgentGateway {
     }
 
     private AgentCommandDispatcher.Result execute(AgentCommand command) {
-        RoleManager roles = context.getSystemService(RoleManager.class);
-        boolean dialer = roles != null && roles.isRoleHeld(RoleManager.ROLE_DIALER);
+        boolean dialer = DialerRoleCompat.isDefaultDialer(context);
         return AgentCommandDispatcher.execute(command, dialer,
                 value -> {
                     CallRepository.ActionResult result = CallRepository.execute(
