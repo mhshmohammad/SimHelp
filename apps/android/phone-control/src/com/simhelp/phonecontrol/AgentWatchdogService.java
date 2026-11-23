@@ -3,7 +3,6 @@ package com.simhelp.phonecontrol;
 import android.app.Service;
 import android.app.ActivityOptions;
 import android.app.PendingIntent;
-import android.app.role.RoleManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
@@ -69,9 +68,7 @@ public final class AgentWatchdogService extends Service {
                     AgentCommand command = AgentCommand.parse(payload);
                     BridgeLog.info("command_received action=" + command.action + " command_id="
                             + DebugRedactor.safeIdentifier(command.id));
-                    RoleManager roleManager = getSystemService(RoleManager.class);
-                    boolean dialerRoleHeld = roleManager != null
-                            && roleManager.isRoleHeld(RoleManager.ROLE_DIALER);
+                    boolean dialerRoleHeld = DialerRoleCompat.isDefaultDialer(this);
                     AgentCommandDispatcher.Result result = AgentCommandDispatcher.execute(
                             command, dialerRoleHeld,
                             call -> {
