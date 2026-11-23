@@ -6,6 +6,8 @@ The Android phone owns the SIM and integrates with Android Telecom and SMS APIs.
 
 The no-root Android audio path uses a separately authorized Shizuku service. Android permission approval, a running Shizuku process, an authenticated network link, and working two-way carrier audio are distinct conditions.
 
+Android 8/9 compatibility uses a legacy default-dialer request fallback because RoleManager is unavailable on those versions.
+
 ## Connection paths
 
 - **VoWLAN:** local-network control and audio between paired devices.
