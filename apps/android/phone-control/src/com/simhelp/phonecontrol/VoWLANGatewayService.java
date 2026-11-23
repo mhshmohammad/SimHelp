@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
-import android.app.role.RoleManager;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.net.ConnectivityManager;
@@ -128,18 +127,15 @@ public final class VoWLANGatewayService extends Service {
                     DirectCallOwnership.disconnectHost(activeHotspot);
                 }
                 boolean paired = VoWLANPairingStore.configured(this);
-                RoleManager roleManager = getSystemService(RoleManager.class);
-                boolean dialerRoleHeld = roleManager != null
-                        && roleManager.isRoleAvailable(RoleManager.ROLE_DIALER)
-                        && roleManager.isRoleHeld(RoleManager.ROLE_DIALER);
+                boolean dialerRoleHeld = DialerRoleCompat.isDefaultDialer(this);
                 boolean agentReady = false;
                 boolean pcmReady = false;
                 if (avf != null && paired && AppConfig.configured(this)) {
                     boolean sameRunningGateway = (control != null && control.localPort() > 0
                             && pcm != null && pcm.localPort() > 0) || !extraGateways.isEmpty();
                     if (sameRunningGateway) {
-                        // 不用空 TCP 探针打扰正在使用的单会话 PCM bridge。已启动的 relay
-                        // 会在真实客户端连接时完成内部握手并报告精确错误。
+                        // ä¸ç”¨ç©º TCP æŽ¢é’ˆæ‰“æ‰°æ­£åœ¨ä½¿ç”¨çš„å•ä¼šè¯ PCM bridgeã€‚å·²å¯åŠ¨çš„ relay
+                        // ä¼šåœ¨çœŸå®žå®¢æˆ·ç«¯è¿žæŽ¥æ—¶å®Œæˆå†…éƒ¨æ¡æ‰‹å¹¶æŠ¥å‘Šç²¾ç¡®é”™è¯¯ã€‚
                         agentReady = true;
                         pcmReady = true;
                     } else {
@@ -162,8 +158,8 @@ public final class VoWLANGatewayService extends Service {
                     syncAdditionalGateways(extraAddresses, avf);
                     if (hotspot != null) ensureStarted(hotspot, avf);
                     else stopPrimaryGateway();
-                    update(hotspot != null ? "VoWLAN ready ·" + hotspot.getHostAddress()
-                            : "Manual Direct Connect Gateway Ready · Connectable via Tailscale");
+                    update(hotspot != null ? "VoWLAN ready Â·" + hotspot.getHostAddress()
+                            : "Manual Direct Connect Gateway Ready Â· Connectable via Tailscale");
                 } else {
                     stopGateways();
                     update(!dialerRoleHeld ? "Please make SimHelp your default phone app"
