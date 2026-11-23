@@ -2,7 +2,7 @@
 
 ## Android phone
 
-The current APK requires Android 10 or later. The development device is a Galaxy A12 running Android 12; two-way call audio still needs device testing.
+The current APK supports Android 8 (API 26) and later in this experimental compatibility branch. The development device is a Galaxy A12 running Android 12; two-way call audio still needs device testing.
 
 1. Install the signed SimHelp APK.
 2. Open SimHelp and set it as the default phone app when requested.
